@@ -1,0 +1,104 @@
+<!-- contat.html -->
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aloqa Formasi</title>
+  <style>
+    body { font-family: system-ui, sans-serif; background: #f8fafc; display: flex; justify-content: center; padding: 2rem; margin: 0; }
+    .wrapper { background: white; padding: 2rem; border-radius: 14px; box-shadow: 0 6px 12px rgba(0,0,0,0.08); width: 100%; max-width: 450px; }
+    h2 { text-align: center; color: #0f172a; margin-bottom: 1.5rem; }
+    label { display: block; margin-bottom: 0.5rem; font-weight: 500; }
+    input, textarea { width: 100%; padding: 0.8rem; border: 1px solid #cbd5e1; border-radius: 8px; margin-bottom: 1rem; font-size: 1rem; }
+    textarea { resize: vertical; min-height: 80px; }
+    button[type="submit"] { width: 100%; background: #2563eb; color: white; border: none; padding: 0.9rem; border-radius: 8px; font-size: 1rem; cursor: pointer; }
+    button[type="submit"]:hover { background: #1d4ed8; }
+    .msg-list { margin-top: 2rem; border-top: 2px dashed #e2e8f0; padding-top: 1rem; }
+    .msg-item { background: #f1f5f9; padding: 1rem; border-radius: 10px; margin-bottom: 0.8rem; position: relative; }
+    .msg-item small { color: #64748b; }
+    .delete { position: absolute; top: 0.5rem; right: 0.5rem; background: #ef4444; color: white; border: none; padding: 0.3rem 0.6rem; border-radius: 6px; cursor: pointer; font-size: 0.8rem; }
+    .clear-btn { background: #64748b; margin-top: 1rem; width: 100%; }
+    .toast { position: fixed; bottom: 2rem; right: 2rem; background: #10b981; color: white; padding: 1rem 1.5rem; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); transform: translateY(100px); transition: 0.3s; }
+    .toast.show { transform: translateY(0); }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <h2>📬 Xabar Yuborish</h2>
+    <form id="contactForm">
+      <label for="name">Ismingiz</label>
+      <input type="text" id="name" required placeholder="Ali">
+      
+      <label for="email">Email</label>
+      <input type="email" id="email" required placeholder="ali@example.com">
+      
+      <label for="message">Xabar</label>
+      <textarea id="message" required placeholder="Xabaringizni yozing..."></textarea>
+      
+      <button type="submit">🚀 Yuborish</button>
+    </form>
+
+    <div id="list" class="msg-list"></div>
+    <button id="clearAll" class="clear-btn" style="display:none">🗑️ Hammasini tozalash</button>
+  </div>
+
+  <div id="toast" class="toast">✅ Muvaffaqiyatli saqlandi!</div>
+
+  <script>
+    const form = document.getElementById("contactForm");
+    const list = document.getElementById("list");
+    const clearBtn = document.getElementById("clearAll");
+    const toast = document.getElementById("toast");
+    const STORAGE_KEY = "contact_msgs";
+
+    function getMsgs() { return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"); }
+    function saveMsgs(msgs) { localStorage.setItem(STORAGE_KEY, JSON.stringify(msgs)); }
+    function showToast() { toast.classList.add("show"); setTimeout(() => toast.classList.remove("show"), 2000); }
+
+    function render() {
+      const msgs = getMsgs();
+      list.innerHTML = "";
+      clearBtn.style.display = msgs.length ? "block" : "none";
+      msgs.forEach((m, i) => {
+        const div = document.createElement("div");
+        div.className = "msg-item";
+        div.innerHTML = `
+          <strong>${m.name}</strong> <small>(${m.email})</small><br>
+          ${m.message}
+          <button class="delete" onclick="deleteMsg(${i})">✕</button>
+        `;
+        list.appendChild(div);
+      });
+    }
+
+    window.deleteMsg = (idx) => {
+      const msgs = getMsgs(); msgs.splice(idx, 1); saveMsgs(msgs); render();
+    };
+
+    form.onsubmit = (e) => {
+      e.preventDefault();
+      const name = document.getElementById("name").value.trim();
+      const email = document.getElementById("email").value.trim();
+      const message = document.getElementById("message").value.trim();
+      if (!name || !email || !message) return;
+      
+      const msgs = getMsgs();
+      msgs.unshift({ name, email, message, date: new Date().toLocaleString() });
+      saveMsgs(msgs);
+      form.reset();
+      showToast();
+      render();
+    };
+
+    clearBtn.onclick = () => {
+      if (confirm("Barcha xabarlar o'chirilsinmi?")) {
+        localStorage.removeItem(STORAGE_KEY);
+        render();
+      }
+    };
+
+    render();
+  </script>
+</body>
+</html>
